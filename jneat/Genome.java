@@ -81,31 +81,19 @@ public class Genome extends Neat {
         Vector<Gene> genes_dup = new Vector<>(genes.size(), 0);
         int _trait_id;
 
-        Iterator<Trait> itr_trait;
-        Iterator<NNode> itr_node;
-        Iterator<Gene> itr_gene;
-
         // duplicate trait
-        itr_trait = traits.iterator();
-        while (itr_trait.hasNext()) {
-            Trait _trait = itr_trait.next();
-
+        for (Trait _trait : traits) {
             newtrait = new Trait(_trait);
             traits_dup.add(newtrait);
         }
 
         // duplicate NNodes
-        itr_node = nodes.iterator();
-        while (itr_node.hasNext()) {
-            NNode _node = itr_node.next();
+        for (NNode _node : nodes) {
             assoc_trait = null;
 
             if (_node.getNodetrait() != null) {
                 _trait_id = _node.nodetrait.trait_id;
-
-                itr_trait = traits_dup.iterator();
-                while (itr_trait.hasNext()) {
-                    Trait _trait = itr_trait.next();
+                for (Trait _trait : traits_dup) {
                     if (_trait.trait_id == _trait_id) {
                         assoc_trait = _trait;
                         break;
@@ -120,14 +108,8 @@ public class Genome extends Neat {
             nodes_dup.add(newnode);
         }
 
-        /*
-         * duplicate Genes
-         */
-        itr_gene = genes.iterator();
-        while (itr_gene.hasNext()) {
-
-            Gene _gene = itr_gene.next();
-
+        // duplicate Genes
+        for (Gene _gene : genes) {
             // point to news nodes created  at precedent step
             inode = _gene.lnk.in_node.dup;
             onode = _gene.lnk.out_node.dup;
@@ -136,9 +118,7 @@ public class Genome extends Neat {
             assoc_trait = null;
             if (traitptr != null) {
                 _trait_id = traitptr.getTrait_id();
-                itr_trait = traits_dup.iterator();
-                while (itr_trait.hasNext()) {
-                    Trait _trait = itr_trait.next();
+                for (Trait _trait : traits_dup) {
                     if (_trait.trait_id == _trait_id) {
                         assoc_trait = _trait;
                         break;
@@ -248,13 +228,7 @@ public class Genome extends Neat {
         NNode inode;
         NNode onode;
 
-        Iterator<NNode> itr_node;
-        Iterator<Gene> itr_gene;
-
-        itr_node = nodes.iterator();
-        while (itr_node.hasNext()) {
-            NNode _node = itr_node.next();
-
+        for (NNode _node : nodes) {
             //create a copy of gene node for fenotype
             newnode = new NNode(_node.type, _node.node_id);
 
@@ -290,10 +264,7 @@ public class Genome extends Neat {
             this.op_view();
         }
 
-        itr_gene = genes.iterator();
-        while (itr_gene.hasNext()) {
-            Gene _gene = itr_gene.next();
-
+        for (Gene _gene : genes) {
             //Only create the link if the gene is enabled
             if (_gene.enable) {
                 curlink = _gene.lnk;
@@ -452,10 +423,6 @@ public class Genome extends Neat {
         boolean disab;
         int last_id = 0;
 
-        Iterator<Gene> itr_gene;
-        Iterator<Gene> itr_gene1;
-        Iterator<NNode> itr_node;
-
         if (genes.size() == 0) {
             //         System.out.print("\n DEBUG genome.costructor.genome.random");
             //         System.out.println("\n *ERROR* are not genes");
@@ -475,10 +442,7 @@ public class Genome extends Neat {
         }
 
         // control if nodes in gene are defined and are the same nodes il nodes list
-        itr_gene = genes.iterator();
-        while (itr_gene.hasNext()) {
-            Gene _gene = itr_gene.next();
-
+        for (Gene _gene : genes) {
             inode = _gene.lnk.in_node;
             onode = _gene.lnk.out_node;
 
@@ -507,9 +471,7 @@ public class Genome extends Neat {
         }
 
         // verify if list nodes is ordered
-        itr_node = nodes.iterator();
-        while (itr_node.hasNext()) {
-            NNode _node = itr_node.next();
+        for (NNode _node : nodes) {
             if (_node.node_id < last_id) {
                 System.out.println("ALERT: NODES OUT OF ORDER : ");
                 System.out.println(
@@ -520,16 +482,12 @@ public class Genome extends Neat {
         }
 
         // control in genes are gene duplicate for contents
-        itr_gene = genes.iterator();
-        while (itr_gene.hasNext()) {
-            Gene _gene = itr_gene.next();
+        for (Gene _gene : genes) {
             i1 = _gene.lnk.in_node.node_id;
             o1 = _gene.lnk.out_node.node_id;
             r1 = _gene.lnk.is_recurrent;
 
-            itr_gene1 = itr_gene;
-            while (itr_gene1.hasNext()) {
-                Gene _gene1 = itr_gene1.next();
+            for (Gene _gene1 : genes) {
                 if (_gene1.lnk.in_node.node_id == i1
                         && _gene1.lnk.out_node.node_id == o1
                         && _gene1.lnk.is_recurrent == r1) {
@@ -548,10 +506,7 @@ public class Genome extends Neat {
 
         if (nodes.size() >= 500) {
             disab = false;
-            itr_gene = genes.iterator();
-            while (itr_gene.hasNext()) {
-                Gene _gene = itr_gene.next();
-
+            for (Gene _gene : genes) {
                 if (!_gene.enable && disab) {
                     System.out.print("\n ALERT: 2 DISABLES IN A ROW: " + _gene.lnk.in_node.node_id);
                     System.out.print(" inp node=" + _gene.lnk.in_node.node_id);
@@ -652,8 +607,6 @@ public class Genome extends Neat {
         Vector<Gene> newgenes = new Vector<>(len_genome, 0);
         Vector<NNode> newnodes = new Vector<>(len_nodes, 0);
 
-        Iterator<Gene> itr_newgenes;
-
         j1 = 0;
         j2 = 0;
 
@@ -711,14 +664,12 @@ public class Genome extends Neat {
                 }
             }
 
-            //Check to see if the chosengene conflicts with an already chosen gene
-            //i.e. do they represent the same link
-            itr_newgenes = newgenes.iterator();
-
             assert chosengene != null;
 
-            while (itr_newgenes.hasNext()) {
-                _curgene2 = itr_newgenes.next();
+            //Check to see if the chosengene conflicts with an already chosen gene
+            //i.e. do they represent the same link
+            for (Gene gene : newgenes) {
+                _curgene2 = gene;
 
                 if (_curgene2.lnk.in_node.node_id == chosengene.lnk.in_node.node_id
                         && _curgene2.lnk.out_node.node_id == chosengene.lnk.out_node.node_id
@@ -967,8 +918,6 @@ public class Genome extends Neat {
         Vector<Gene> newgenes = new Vector<>(len_genome, 0);
         Vector<NNode> newnodes = new Vector<>(len_nodes, 0);
 
-        Iterator<Gene> itr_newgenes;
-
         j1 = 0;
         j2 = 0;
 
@@ -1057,9 +1006,8 @@ public class Genome extends Neat {
 
             //Check to see if the chosengene conflicts with an already chosen gene
             //i.e. do they represent the same link
-            itr_newgenes = newgenes.iterator();
-            while (itr_newgenes.hasNext()) {
-                _curgene2 = itr_newgenes.next();
+            for (Gene gene : newgenes) {
+                _curgene2 = gene;
 
                 if (_curgene2.lnk.in_node.node_id == chosengene.lnk.in_node.node_id
                         && _curgene2.lnk.out_node.node_id == chosengene.lnk.out_node.node_id
@@ -1235,8 +1183,6 @@ public class Genome extends Neat {
         int size1 = genes.size();
         int size2 = g.genes.size();
         int crosspoint;
-
-        Iterator<Gene> itr_newgenes;
 
         NNode curnode = null;
         NNode inode;
@@ -1443,11 +1389,10 @@ public class Genome extends Neat {
                     }
                 }
 
-                itr_newgenes = newgenes.iterator();
-
                 assert chosengene != null;
-                while (itr_newgenes.hasNext()) {
-                    _curgene2 = itr_newgenes.next();
+
+                for (Gene gene : newgenes) {
+                    _curgene2 = gene;
 
                     if (_curgene2.lnk.in_node.node_id == chosengene.lnk.in_node.node_id
                             && _curgene2.lnk.out_node.node_id == chosengene.lnk.out_node.node_id
@@ -1733,7 +1678,6 @@ public class Genome extends Neat {
     }
 
     public void mutate_add_link(Population pop, int tries) {
-        boolean done = false;
         boolean do_recur;
         boolean loop_recur;
         boolean found = false;
@@ -1751,22 +1695,17 @@ public class Genome extends Neat {
 
         NNode thenode1 = null;
         NNode thenode2 = null;
-        Gene new_gene = null;
         Gene _gene;
-
-        Iterator<NNode> itr_node;
-        Iterator<Innovation> itr_innovation;
 
         //Decide whether to make this recurrent
         do_recur = NeatRoutine.randfloat() < Neat.p_recur_only_prob;
 
         //Find the first non-sensor so that the to-node won't look at sensors as
         //possible destinations
-        itr_node = nodes.iterator();
         first_nonsensor = 0;
 
-        while (itr_node.hasNext()) {
-            thenode1 = itr_node.next();
+        for (NNode node : nodes) {
+            thenode1 = node;
             if (thenode1.type != NeatConstant.SENSOR) {
                 break;
             }
@@ -1851,47 +1790,34 @@ public class Genome extends Neat {
         } // end block trycount
 
         if (found) {
+            Gene new_gene = null;
             //Check to see if this innovation already occured in the population
-            itr_innovation = pop.innovations.iterator();
+            for (int i = 0; i < pop.innovations.size(); i++) {
+                Innovation _innov = pop.innovations.get(i);
+                if ((_innov.innovation_type == NeatConstant.NEWLINK)
+                        && (_innov.node_in_id == thenode1.node_id)
+                        && (_innov.node_out_id == thenode2.node_id)
+                        && (_innov.recur_flag == do_recur)) {
 
-            while (!done) {
-                if (!itr_innovation.hasNext()) {
-                    //If the phenotype does not exist, exit on false,print error
-                    //Note: This should never happen- if it does there is a bug
-                    if (phenotype == null) {
-                        System.out.print("ERROR: Attempt to add link to genome with no phenotype");
-                        return;
-                    }
-
-                    //Choose a random trait
-                    traitnum = NeatRoutine.randint(0, traits.size() - 1);
-
-                    //Choose the new weight
-                    //newweight=(gaussrand())/1.5;  //Could use a gaussian
-                    new_weight = NeatRoutine.randposneg() * NeatRoutine.randfloat() * 10.0;
-
-                    // read from population current innovation value
-                    // read curr innovation with postincrement
-                    double curr_innov = pop.getCurr_innov_num_and_increment();
-                    //Create the new gene
-                    new_gene = new Gene(traits.elementAt(traitnum), new_weight, thenode1, thenode2, do_recur, curr_innov, new_weight);
-                    //Add the innovation
-                    pop.innovations.add(new Innovation(thenode1.node_id, thenode2.node_id, curr_innov, new_weight, traitnum));
-                    done = true;
+                    new_gene = new Gene(traits.elementAt(_innov.new_traitnum), _innov.new_weight, thenode1, thenode2, do_recur, _innov.innovation_num1, 0);
+                    break;
                 }
+            }
 
-                //OTHERWISE, match the innovation in the innovs list
-                else {
-                    Innovation _innov = itr_innovation.next();
-                    if ((_innov.innovation_type == NeatConstant.NEWLINK)
-                            && (_innov.node_in_id == thenode1.node_id)
-                            && (_innov.node_out_id == thenode2.node_id)
-                            && (_innov.recur_flag == do_recur)) {
+            if (new_gene == null) {
+                //Choose a random trait
+                traitnum = NeatRoutine.randint(0, traits.size() - 1);
 
-                        new_gene = new Gene(traits.elementAt(_innov.new_traitnum), _innov.new_weight, thenode1, thenode2, do_recur, _innov.innovation_num1, 0);
-                        done = true;
-                    }
-                }
+                //Choose the new weight
+                new_weight = NeatRoutine.randposneg() * NeatRoutine.randfloat() * 10.0;
+
+                // read from population current innovation value
+                // read curr innovation with postincrement
+                double curr_innov = pop.getCurr_innov_num_and_increment();
+                //Create the new gene
+                new_gene = new Gene(traits.elementAt(traitnum), new_weight, thenode1, thenode2, do_recur, curr_innov, new_weight);
+                //Add the innovation
+                pop.innovations.add(new Innovation(thenode1.node_id, thenode2.node_id, curr_innov, new_weight, traitnum));
             }
 
             genes.add(new_gene);
@@ -1904,15 +1830,10 @@ public class Genome extends Neat {
         Link thelink;
         double oldweight;
 
-        Gene newgene1 = null;
-        Gene newgene2 = null;
         NNode in_node;
         NNode out_node;
-        NNode new_node = null;
-        Iterator<Innovation> itr_innovation;
         Trait traitptr;
 
-        int j;
         int genenum;
         int trycount = 0;
 
@@ -1923,14 +1844,14 @@ public class Genome extends Neat {
 
         if (genes.size() < 15) {
             step2 = false;
-            for (j = 0; j < genes.size(); j++) {
+            for (int j = 0; j < genes.size(); j++) {
                 _gene = genes.elementAt(j);
                 if (_gene.enable && (_gene.lnk.in_node.gen_node_label != NeatConstant.BIAS)) {
                     break;
                 }
             }
 
-            for (; j < genes.size(); j++) {
+            for (int j = 0; j < genes.size(); j++) {
                 _gene = genes.elementAt(j);
                 if ((NeatRoutine.randfloat() >= 0.3)
                         && (_gene.lnk.in_node.gen_node_label != NeatConstant.BIAS)) {
@@ -1972,56 +1893,52 @@ public class Genome extends Neat {
         in_node = thelink.in_node;
         out_node = thelink.out_node;
 
-        boolean done = false;
-        itr_innovation = pop.innovations.iterator();
+        Gene newgene1 = null;
+        Gene newgene2 = null;
+        NNode new_node = null;
 
-        while (!done) {
-            //Check to see if this innovation already occured in the population
-            if (!itr_innovation.hasNext()) {
-                //The innovation is totally novel
-                //Create the new Genes
-                //Create the new NNode
-                //By convention, it will point to the first trait
-                // get the current node id with postincrement
-                int curnode_id = pop.getCur_node_id_and_increment();
+        for (int i = 0; i < pop.innovations.size(); i++) {
+            Innovation _innov = pop.innovations.get(i);
 
-                // pass this current nodeid to newnode and create the new node
-                new_node = new NNode(NeatConstant.NEURON, curnode_id, NeatConstant.HIDDEN);
+            if ((_innov.innovation_type == NeatConstant.NEWNODE)
+                    && (_innov.node_in_id == in_node.node_id)
+                    && (_innov.node_out_id == out_node.node_id)
+                    && (_innov.old_innov_num == _gene.innovation_num)) {
+                // Create the new Genes
+                // pass this current nodeid to newnode
+                new_node = new NNode(NeatConstant.NEURON, _innov.newnode_id, NeatConstant.HIDDEN);
                 new_node.nodetrait = traits.firstElement();
 
-                // get the current gene inovation with post increment
-                gene_innov1 = pop.getCurr_innov_num_and_increment();
-
-                // create gene with the current gene inovation
-                newgene1 = new Gene(traitptr, 1.0, in_node, new_node, thelink.is_recurrent, gene_innov1, 0);
-
-                // re-read the current innovation with increment
-                gene_innov2 = pop.getCurr_innov_num_and_increment();
-
-                // create the second gene with this innovation incremented
-                newgene2 = new Gene(traitptr, oldweight, new_node, out_node, false, gene_innov2, 0);
-
-                pop.innovations.add(new Innovation(in_node.node_id, out_node.node_id, gene_innov1, gene_innov2, new_node.node_id, _gene.innovation_num));
-                done = true;
+                newgene1 = new Gene(traitptr, 1.0, in_node, new_node, thelink.is_recurrent, _innov.innovation_num1, 0);
+                newgene2 = new Gene(traitptr, oldweight, new_node, out_node, false, _innov.innovation_num2, 0);
             }
-            // end for new innovation case
-            else {
-                Innovation _innov = itr_innovation.next();
+        }
 
-                if ((_innov.innovation_type == NeatConstant.NEWNODE)
-                        && (_innov.node_in_id == in_node.node_id)
-                        && (_innov.node_out_id == out_node.node_id)
-                        && (_innov.old_innov_num == _gene.innovation_num)) {
-                    // Create the new Genes
-                    // pass this current nodeid to newnode
-                    new_node = new NNode(NeatConstant.NEURON, _innov.newnode_id, NeatConstant.HIDDEN);
-                    new_node.nodetrait = traits.firstElement();
+        if (new_node == null) {
+            //The innovation is totally novel
+            //Create the new Genes
+            //Create the new NNode
+            //By convention, it will point to the first trait
+            // get the current node id with postincrement
+            int curnode_id = pop.getCur_node_id_and_increment();
 
-                    newgene1 = new Gene(traitptr, 1.0, in_node, new_node, thelink.is_recurrent, _innov.innovation_num1, 0);
-                    newgene2 = new Gene(traitptr, oldweight, new_node, out_node, false, _innov.innovation_num2, 0);
-                    done = true;
-                }
-            }
+            // pass this current nodeid to newnode and create the new node
+            new_node = new NNode(NeatConstant.NEURON, curnode_id, NeatConstant.HIDDEN);
+            new_node.nodetrait = traits.firstElement();
+
+            // get the current gene inovation with post increment
+            gene_innov1 = pop.getCurr_innov_num_and_increment();
+
+            // create gene with the current gene inovation
+            newgene1 = new Gene(traitptr, 1.0, in_node, new_node, thelink.is_recurrent, gene_innov1, 0);
+
+            // re-read the current innovation with increment
+            gene_innov2 = pop.getCurr_innov_num_and_increment();
+
+            // create the second gene with this innovation incremented
+            newgene2 = new Gene(traitptr, oldweight, new_node, out_node, false, gene_innov2, 0);
+
+            pop.innovations.add(new Innovation(in_node.node_id, out_node.node_id, gene_innov1, gene_innov2, new_node.node_id, _gene.innovation_num));
         }
 
         //Now add the new NNode and new Genes to the Genome
@@ -2041,7 +1958,7 @@ public class Genome extends Neat {
      * r   = the network can have a nodes recurrent ?
      * linkprob = probability of a link from nodes ( must be in interval  ]0,1[);
      */
-    public Genome(int new_id, int i, int o, int n, int nmax, boolean r, double linkprob) {
+    public Genome(int new_id, int inputNodesCount, int outputNodesCount, int hiddenNodesCount, int nmax, boolean recurrentNodes, double linkprob) {
         int totalnodes;
         int matrixdim;
         int maxnode;
@@ -2076,7 +1993,7 @@ public class Genome extends Neat {
         //     first output ----------------------------------------+
         //
         //
-        totalnodes = i + o + nmax;
+        totalnodes = inputNodesCount + outputNodesCount + nmax;
 
         traits = new Vector<>(Neat.p_num_trait_params, 0);
         nodes = new Vector<>(totalnodes, 0);
@@ -2087,8 +2004,8 @@ public class Genome extends Neat {
         boolean[] cm = new boolean[matrixdim]; //Dimension the connection matrix
         boolean[] cmp;
 
-        maxnode = i + n;
-        first_output = totalnodes - o + 1;
+        maxnode = inputNodesCount + hiddenNodesCount;
+        first_output = totalnodes - outputNodesCount + 1;
 
         //Assign the id
         genome_id = new_id;
@@ -2098,8 +2015,8 @@ public class Genome extends Neat {
         traits.add(newtrait);
 
         //Build the input nodes
-        for (count = 1; count <= i; count++) {
-            if (count < i) {
+        for (count = 1; count <= inputNodesCount; count++) {
+            if (count < inputNodesCount) {
                 newnode = new NNode(NeatConstant.SENSOR, count, NeatConstant.INPUT);
             } else {
                 newnode = new NNode(NeatConstant.SENSOR, count, NeatConstant.BIAS);
@@ -2111,7 +2028,7 @@ public class Genome extends Neat {
         }
 
         //Build the hidden nodes
-        for (count = i + 1; count <= i + n; count++) {
+        for (count = inputNodesCount + 1; count <= inputNodesCount + hiddenNodesCount; count++) {
             newnode = new NNode(NeatConstant.NEURON, count, NeatConstant.HIDDEN);
             newnode.nodetrait = newtrait;
 
@@ -2162,7 +2079,7 @@ public class Genome extends Neat {
 
             for (col = 1; col <= totalnodes; col++) {
                 for (row = 1; row <= totalnodes; row++) {
-                    if ((cmp[innov_number] && (col > i))
+                    if ((cmp[innov_number] && (col > inputNodesCount))
                             && ((col <= maxnode) || (col >= first_output))
                             && ((row <= maxnode) || (row >= first_output))) {
                         //If it isn't recurrent, create the connection no matter what
@@ -2171,16 +2088,16 @@ public class Genome extends Neat {
                         if (col > row)
                             flag_recurrent = false;
                         else {
-                            if (!r)
+                            if (!recurrentNodes)
                                 create_gene = false;
                             flag_recurrent = true;
                         }
 
                         if (create_gene) {
                             fnd = 0;
-                            Iterator<NNode> itr_node = nodes.iterator(); //Retrieve the in_node , out_node
-                            while (itr_node.hasNext() && (fnd < 2)) {
-                                NNode _node = itr_node.next();
+
+                            for (int i = 0; i < nodes.size() && fnd < 2; i++) {
+                                NNode _node = nodes.get(i);
                                 if (_node.node_id == row) {
                                     fnd++;
                                     in_node = _node;
@@ -2212,7 +2129,7 @@ public class Genome extends Neat {
                     int lx = net.max_depth();
                     int dx = net.is_stabilized(lx);
 
-                    if (((dx == lx) && (!r)) || ((lx > 0) && (r) && (dx == 0))) {
+                    if (((dx == lx) && (!recurrentNodes)) || ((lx > 0) && (recurrentNodes) && (dx == 0))) {
                         done = true;
                     }
                 }
