@@ -7,39 +7,28 @@ import jNeatCommon.NeatRoutine;
 import java.text.DecimalFormat;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 public class Genome extends Neat {
-    /*
-     * Is a reference from this genotype to phenotype
-     */
+    // Is a reference from this genotype to phenotype
     Network phenotype;
 
-    /*
-     * Numeric identification for this genotype
-     */
+    // Numeric identification for this genotype
     public int genome_id;
 
-    /*
-     * Each Gene in (3) has a marker telling when it arose historically;
-     * Thus, these Genes can be used to speciate the population, and
-     * the list of Genes provide an evolutionary history of innovation and link-building
-     */
+    // Each Gene in (3) has a marker telling when it arose historically;
+    // Thus, these Genes can be used to speciate the population, and
+    // the list of Genes provide an evolutionary history of innovation and link-building
     Vector<Gene> genes;
 
-    /*
-     * parameter conglomerations :Reserved parameter space for future use
-     */
+    // parameter conglomerations :Reserved parameter space for future use
     Vector<Trait> traits;
 
-    /*
-     * Is a collection of NNode mapped in a Vector;
-     */
+    // Is a collection of NNode mapped in a Vector;
     Vector<NNode> nodes;
 
-    /*
-     * note are two String for store statistics information
-     * when genomes are readed (if exist : null otherwise);
-     */
+    // note are two String for store statistics information
+    // when genomes are readed (if exist : null otherwise);
     public String notes;
 
     public int getGenome_id() {
@@ -71,59 +60,34 @@ public class Genome extends Neat {
         Vector<NNode> nodes_dup = new Vector<>(nodes.size(), 0);
         Vector<Gene> genes_dup = new Vector<>(genes.size(), 0);
 
-        int _trait_id;
-
         // duplicate trait
-        for (Trait _trait : traits) {
-            traits_dup.add(new Trait(_trait));
-        }
+        traits_dup.addAll(traits.stream().map(Trait::new).collect(Collectors.toList()));
 
         // duplicate NNodes
         for (NNode _node : nodes) {
-            Trait assoc_trait = null;
-
-            if (_node.getNodetrait() != null) {
-                _trait_id = _node.nodetrait.trait_id;
-                for (Trait _trait : traits_dup) {
-                    if (_trait.trait_id == _trait_id) {
-                        assoc_trait = _trait;
-                        break;
-                    }
-
-                }
-            }
-
-            NNode newnode = new NNode(_node, assoc_trait);
-
+            NNode newnode = new NNode(
+                    _node,
+                    traits_dup.stream().filter(t -> _node.nodetrait != null && t.trait_id == _node.nodetrait.trait_id).findFirst().orElse(null)
+            );
             _node.dup = newnode;
             nodes_dup.add(newnode);
         }
 
         // duplicate Genes
         for (Gene _gene : genes) {
-            // point to news nodes created  at precedent step
-            Trait assoc_trait = null;
-            if (_gene.lnk.linktrait != null) {
-                _trait_id = _gene.lnk.linktrait.getTrait_id();
-                for (Trait _trait : traits_dup) {
-                    if (_trait.trait_id == _trait_id) {
-                        assoc_trait = _trait;
-                        break;
-                    }
-                }
-            }
-
             // creation of new gene with a pointer to new node
-            genes_dup.add(new Gene(_gene, assoc_trait, _gene.lnk.in_node.dup, _gene.lnk.out_node.dup));
+            genes_dup.add(new Gene(
+                    _gene,
+                    traits_dup.stream().filter(t -> _gene.lnk.linktrait != null && t.trait_id == _gene.lnk.linktrait.trait_id).findFirst().orElse(null),
+                    _gene.lnk.in_node.dup,
+                    _gene.lnk.out_node.dup)
+            );
         }
 
         // okay all nodes created, the new genome can be generate
         return new Genome(new_id, traits_dup, nodes_dup, genes_dup);
     }
 
-    /**
-     *
-     */
     public Genome(int id, Vector<Trait> traits, Vector<NNode> nodes, Vector<Gene> genes) {
         genome_id = id;
         this.traits = traits;
