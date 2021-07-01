@@ -2,10 +2,10 @@
 
    package jneat;
 
-   import java.util.*;
-
-   import java.text.*;
    import jNeatCommon.*;
+
+import java.text.DecimalFormat;
+import java.util.*;
 
 /** A Population is a group of Organisms including their species */
 	public class Population extends Neat {
@@ -16,7 +16,7 @@
 	  public Vector species;
    
    /** For holding the genetic innovations of the newest generation */
-	  Vector innovations = new Vector(1,0);
+	  Vector<Innovation> innovations = new Vector(1,0);
    
    /** Current label number available for nodes */
 	  private int cur_node_id;

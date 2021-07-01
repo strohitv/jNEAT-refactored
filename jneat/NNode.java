@@ -2,9 +2,13 @@
 
    package jneat;
 
-   import java.util.*;
-   import java.text.*;
-   import jNeatCommon.*;
+   import jNeatCommon.IOseq;
+import jNeatCommon.NeatConstant;
+
+import java.text.DecimalFormat;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.Vector;
 /**
  * A NODE is either a NEURON or a SENSOR. If it's a sensor, it can be loaded with a value for output
  * If it's a neuron, it has a list of its incoming input signals Use an activation count to avoid flushing
@@ -33,10 +37,10 @@
 	  double[] params = new double[Neat.p_num_trait_params];
    
    /** A list of pointers to incoming weighted signals from other nodes */
-	  Vector incoming = new Vector(1,0);
+	  Vector<Link> incoming = new Vector<>(1,0);
    
    /** A list of pointers to links carrying this node's signal */
-	  Vector outgoing = new Vector(1,0);
+	  Vector<Link> outgoing = new Vector<>(1,0);
    
    /** Numeric identification of node */
 	  int node_id;
