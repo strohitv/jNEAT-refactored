@@ -101,40 +101,28 @@ public class Genome extends Neat {
         //The power of mutation will rise farther into the genome
         //on the theory that the older genes are more fit since
         //they have stood the test of time
-        double gausspoint;
-        double coldgausspoint;
-
         boolean severe = NeatRoutine.randfloat() > 0.5; //Once in a while really shake things up // for 50% of Prob. severe is true
-
         double num = 0.0; //counts gene placement
-        double gene_total = genes.size();
-        double endpart = gene_total * 0.8; //Signifies the last part of the genome
-        double powermod = 1.0; //Modified power by gene number
 
         for (Gene _gene : genes) {
-            if (severe) {
-                gausspoint = 0.3;
-                coldgausspoint = 0.1;
-            }
+            double gausspoint = 0.3;
+            double coldgausspoint = 0.1;
 
-            // with other 50%.....
-            else {
-                if ((gene_total >= 10.0) && (num > endpart)) {
+            if (!severe) { // with other 50%.....
+                if ((genes.size() >= 10.0) && (num > genes.size() * 0.8)) { // 0.8 => Signifies the last part of the genome
                     gausspoint = 0.5;
                     coldgausspoint = 0.3;
+                } else if (NeatRoutine.randfloat() > 0.5) {
+                    gausspoint = 1.0 - rate;
+                    coldgausspoint = 1.0 - rate - 0.1;
                 } else {
-                    if (NeatRoutine.randfloat() > 0.5) {
-                        gausspoint = 1.0 - rate;
-                        coldgausspoint = 1.0 - rate - 0.1;
-                    } else {
-                        gausspoint = 1.0 - rate;
-                        coldgausspoint = 1.0 - rate;
-                    }
+                    gausspoint = 1.0 - rate;
+                    coldgausspoint = 1.0 - rate;
                 }
             }
 
-            // choise a number from ]-1,+1[
-            double randnum = NeatRoutine.randposneg() * NeatRoutine.randfloat() * power * powermod;
+            // choose a number from ]-1,+1[
+            double randnum = NeatRoutine.randposneg() * NeatRoutine.randfloat() * power;
 
             if (mutation_type == NeatConstant.GAUSSIAN) {
                 double randchoice = NeatRoutine.randfloat(); // a number from ]0,1[  //Decide what kind of mutation to do on a gene
