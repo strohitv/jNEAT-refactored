@@ -147,24 +147,14 @@ public class Genome extends Neat {
         Vector<NNode> all_list = new Vector<>(nodes.size(), 0);
 
         for (NNode _node : nodes) {
-            //create a copy of gene node for fenotype
+            // create a copy of gene node for phenotype
             NNode newnode = new NNode(_node.type, _node.node_id);
-
-            //Derive link's parameters from its Trait pointer
-            // of nodetrait
             newnode.derive_trait(_node.nodetrait);
             newnode.inner_level = 0;
-
             newnode.gen_node_label = _node.gen_node_label;
-
-            // new field
             newnode.is_traversed = false;
 
-            if (_node.gen_node_label == NeatConstant.INPUT) {
-                inlist.add(newnode);
-            }
-
-            if (_node.gen_node_label == NeatConstant.BIAS) {
+            if (_node.gen_node_label == NeatConstant.INPUT || _node.gen_node_label == NeatConstant.BIAS) {
                 inlist.add(newnode);
             }
 
@@ -172,7 +162,6 @@ public class Genome extends Neat {
                 outlist.add(newnode);
             }
 
-            // add to genotype the pointer to phenotype node
             all_list.add(newnode);
             _node.analogue = newnode;
         }
@@ -186,34 +175,26 @@ public class Genome extends Neat {
             this.op_view();
         }
 
-        for (Gene _gene : genes) {
-            //Only create the link if the gene is enabled
-            if (_gene.enable) {
-                Link curlink = _gene.lnk;
+        for (Gene _gene : genes.stream().filter(Gene::getEnable).collect(Collectors.toList())) {
+            // Only create the link if the gene is enabled
+            NNode inode = _gene.lnk.in_node.analogue;
+            NNode onode = _gene.lnk.out_node.analogue;
 
-                NNode inode = curlink.in_node.analogue;
-                NNode onode = curlink.out_node.analogue;
-                //NOTE: This line could be run through a recurrency check if desired
-                // (no need to in the current implementation of NEAT)
-                Link newlink = new Link(curlink.weight, inode, onode, curlink.is_recurrent);
-                onode.incoming.add(newlink);
-                inode.outgoing.add(newlink);
+            // NOTE: This line could be run through a recurrency check if desired (no need to in the current implementation of NEAT)
+            Link newlink = new Link(_gene.lnk.weight, inode, onode, _gene.lnk.is_recurrent);
+            onode.incoming.add(newlink);
+            inode.outgoing.add(newlink);
 
-                //Derive link's parameters from its Trait pointer
-                // of linktrait
-                curlink.derive_trait(curlink.linktrait);
-            }
+            // Derive link's parameters from its Trait pointer of linktrait
+            _gene.lnk.derive_trait(_gene.lnk.linktrait);
         }
 
-        //Create the new network
-        Network newnet = new Network(inlist, outlist, all_list, id);
-        //Attach genotype and phenotype together:
-        //  newnet point to owner genotype (this)
-        newnet.setGenotype(this);
+        //  Create the new network
+        //  Attach genotype and phenotype together: newnet point to owner genotype (this)
         //  genotype point to owner phenotype (newnet)
-
-        phenotype = newnet;
-        return newnet;
+        phenotype = new Network(inlist, outlist, all_list, id);
+        phenotype.setGenotype(this);
+        return phenotype;
     }
 
     /**
