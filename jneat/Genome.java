@@ -4,6 +4,7 @@ import jNeatCommon.IOseq;
 import jNeatCommon.NeatConstant;
 import jNeatCommon.NeatRoutine;
 import jneat.utils.CompabilityCounter;
+import jneat.utils.GenomeVerifier;
 import jneat.utils.Printer;
 
 import java.text.DecimalFormat;
@@ -31,6 +32,9 @@ public class Genome extends Neat {
 
     // used to print out information of the Genome
     private final Printer printer = new Printer();
+
+    // used to print out information of the Genome
+    private final GenomeVerifier verifier = new GenomeVerifier(this);
 
     // note are two String for store statistics information
     // when genomes are readed (if exist : null otherwise);
@@ -266,89 +270,7 @@ public class Genome extends Neat {
     }
 
     public boolean verify() {
-        if (genes.size() == 0 || nodes.size() == 0 || traits.size() == 0) {
-            return false;
-        }
-
-        // control if nodes in gene are defined and are the same nodes il nodes list
-        for (Gene _gene : genes) {
-            NNode inode = _gene.lnk.in_node;
-            NNode onode = _gene.lnk.out_node;
-
-            if (inode == null) {
-                System.out.println(" *ERROR* inode = null in genome #" + genome_id);
-                return false;
-            }
-
-            if (onode == null) {
-                System.out.println(" *ERROR* onode = null in genome #" + genome_id);
-                return false;
-            }
-
-            if (!nodes.contains(inode)) {
-                System.out.println("Missing inode:  node defined in gene not found in Vector nodes of genome #" + genome_id);
-                System.out.print("\n the inode is=" + inode.node_id);
-                return false;
-            }
-
-            if (!nodes.contains(onode)) {
-                System.out.println("Missing onode:  node defined in gene not found in Vector nodes of genome #" + genome_id);
-                System.out.print("\n the onode is=" + onode.node_id);
-                return false;
-            }
-        }
-
-        // verify if list nodes is ordered
-        int last_id = 0;
-        for (NNode _node : nodes) {
-            if (_node.node_id < last_id) {
-                System.out.println("ALERT: NODES OUT OF ORDER : ");
-                System.out.println(" last node_id is= " + last_id + " , current node_id=" + _node.node_id);
-                return false;
-            }
-            last_id = _node.node_id;
-        }
-
-        // control in genes are gene duplicate for contents
-        for (Gene _gene : genes) {
-            int i1 = _gene.lnk.in_node.node_id;
-            int o1 = _gene.lnk.out_node.node_id;
-            boolean r1 = _gene.lnk.is_recurrent;
-
-            for (Gene _gene1 : genes) {
-                if (_gene1.lnk.in_node.node_id == i1
-                        && _gene1.lnk.out_node.node_id == o1
-                        && _gene1.lnk.is_recurrent == r1) {
-                    System.out.print(" \n  ALERT: DUPLICATE GENES :");
-                    System.out.print("  inp_node=" + i1 + " out_node=" + o1);
-                    System.out.print("  in GENOME id -->" + genome_id);
-                    System.out.print("  gene1 is : ");
-                    _gene.op_view();
-                    System.out.print("  gene2 is : ");
-                    _gene1.op_view();
-
-                    return false;
-                }
-            }
-        }
-
-        if (nodes.size() >= 500) {
-            boolean disab = false;
-            for (Gene _gene : genes) {
-                if (!_gene.enable && disab) {
-                    System.out.print("\n ALERT: 2 DISABLES IN A ROW: " + _gene.lnk.in_node.node_id);
-                    System.out.print(" inp node=" + _gene.lnk.in_node.node_id);
-                    System.out.print(" out node=" + _gene.lnk.out_node.node_id);
-                    System.out.print(" for GENOME " + genome_id);
-                    System.out.print("\n Gene is :");
-                    _gene.op_view();
-                }
-
-                disab = !_gene.enable;
-            }
-        }
-
-        return true;
+        return verifier.verify();
     }
 
     public Genome mate_multipoint(Genome g, int genomeid, double fitness1, double fitness2) {
