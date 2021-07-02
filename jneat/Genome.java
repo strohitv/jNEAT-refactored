@@ -217,9 +217,9 @@ public class Genome extends Neat {
         // Now move through the Genes of each potential parent until both Genomes end
         for (int j = 0; j < max_genome_size; j++) {
             if (counter.getFirstGenePosition() >= genes.size()) {
-                counter.addOtherExcess();
+                counter.addSecondExcess();
             } else if (counter.getSecondGenePosition() >= other.genes.size()) {
-                counter.addOwnExcess();
+                counter.addFirstExcess();
             } else {
                 Gene _gene1 = genes.elementAt(counter.getFirstGenePosition());
                 Gene _gene2 = other.genes.elementAt(counter.getSecondGenePosition());
@@ -227,9 +227,9 @@ public class Genome extends Neat {
                 if (_gene1.innovation_num == _gene2.innovation_num) {
                     counter.addMatching(_gene1.mutation_num, _gene2.mutation_num);
                 } else if (_gene1.innovation_num < _gene2.innovation_num) {
-                    counter.addOwnDisjoint();
+                    counter.addFirstDisjoint();
                 } else {
-                    counter.addOtherDisjoint();
+                    counter.addSecondDisjoint();
                 }
             }
         }

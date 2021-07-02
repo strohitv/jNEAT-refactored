@@ -10,12 +10,12 @@ public class CompabilityCounter {
 
     private double totalWeigthDifference = 0.0;
 
-    public void addOwnExcess() {
+    public void addFirstExcess() {
         excessCount += 1;
         firstGenePosition++;
     }
 
-    public void addOtherExcess() {
+    public void addSecondExcess() {
         excessCount += 1;
         secondGenePosition++;
     }
@@ -27,12 +27,12 @@ public class CompabilityCounter {
         secondGenePosition++;
     }
 
-    public void addOwnDisjoint() {
+    public void addFirstDisjoint() {
         disjointCount += 1;
         firstGenePosition++;
     }
 
-    public void addOtherDisjoint() {
+    public void addSecondDisjoint() {
         disjointCount += 1;
         secondGenePosition++;
     }
