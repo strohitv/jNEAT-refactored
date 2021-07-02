@@ -2,9 +2,12 @@
 
    package jneat;
 
-   import java.util.*;
-   import java.text.*;
-   import jNeatCommon.*;
+   import jNeatCommon.IOseq;
+import jNeatCommon.NeatConstant;
+
+import java.text.DecimalFormat;
+import java.util.Iterator;
+import java.util.StringTokenizer;
 
 																public class Evolution extends Neat {
    
@@ -556,7 +559,7 @@
 	  // for viewing the imagine of two genome input and the genome output
 	  
 		 System.out.println("\n *******  D I S P L A Y      G R A P H   *********");
-		 gA.View_mate_singlepoint(gB,999);
+		 gA.View_mate_singlepoint(gB);
 		 System.out.println("\n *************************************************");
 	  
 	  
