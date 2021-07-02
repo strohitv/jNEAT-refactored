@@ -4,6 +4,7 @@ import jNeatCommon.IOseq;
 import jNeatCommon.NeatConstant;
 import jNeatCommon.NeatRoutine;
 import jneat.utils.CompabilityCounter;
+import jneat.utils.GenomePrinter;
 
 import java.text.DecimalFormat;
 import java.util.StringTokenizer;
@@ -27,6 +28,9 @@ public class Genome extends Neat {
 
     // Is a collection of NNode mapped in a Vector;
     Vector<NNode> nodes;
+
+    // used to print out information of the Genome
+    private final GenomePrinter printer = new GenomePrinter(this);
 
     // note are two String for store statistics information
     // when genomes are readed (if exist : null otherwise);
@@ -173,7 +177,7 @@ public class Genome extends Neat {
 
         if (outlist.size() == 0) {
             System.out.print("\n ALERT : are a network whitout OUTPUTS; the result can unpredictable");
-            this.op_view();
+            printer.printGenome();
         }
 
         for (Gene _gene : genes.stream().filter(Gene::getEnable).collect(Collectors.toList())) {
@@ -247,47 +251,6 @@ public class Genome extends Neat {
 
     public int get_last_node_id() {
         return nodes.lastElement().node_id + 1;
-    }
-
-    public void op_view() {
-        System.out.print("\n GENOME START   id=" + genome_id);
-        System.out.print("\n  genes are :" + genes.size());
-        System.out.print("\n  nodes are :" + nodes.size());
-        System.out.print("\n  trait are :" + traits.size());
-
-        for (NNode _node : nodes) {
-            if (_node.getGen_node_label() == NeatConstant.INPUT) {
-                System.out.print("\n Input ");
-            }
-
-            if (_node.getGen_node_label() == NeatConstant.OUTPUT) {
-                System.out.print("\n Output");
-            }
-
-            if (_node.getGen_node_label() == NeatConstant.HIDDEN) {
-                System.out.print("\n Hidden");
-            }
-
-            if (_node.getGen_node_label() == NeatConstant.BIAS) {
-                System.out.print("\n Bias  ");
-            }
-
-            _node.op_view();
-        }
-
-        for (Gene _gene : genes) {
-            _gene.op_view();
-        }
-
-        System.out.print("\n");
-        System.out.print(" Traits:\n");
-
-        for (Trait _trait : traits) {
-            _trait.op_view();
-        }
-
-        System.out.print("\n");
-        System.out.print(" GENOME END");
     }
 
     public boolean verify() {
@@ -653,11 +616,11 @@ public class Genome extends Neat {
             System.out.print("\n * during mate_multipoint : please control the following's *********");
             System.out.print("\n * control block : ");
             System.out.print("\n Genome A= ");
-            this.op_view();
+            printer.printGenome();
             System.out.print("\n Genome B= ");
-            g.op_view();
+            g.printer.printGenome();
             System.out.print("\n Result = ");
-            new_genome.op_view();
+            new_genome.printer.printGenome();
             System.exit(0);
         }
 
