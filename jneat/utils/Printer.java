@@ -1,19 +1,14 @@
 package jneat.utils;
 
+import jNeatCommon.IOseq;
 import jNeatCommon.NeatConstant;
 import jneat.Gene;
 import jneat.Genome;
 import jneat.NNode;
 import jneat.Trait;
 
-public class GenomePrinter {
-    private final Genome genome;
-
-    public GenomePrinter(Genome genome) {
-        this.genome = genome;
-    }
-
-    public void printGenome() {
+public class Printer {
+    public void printGenomeOnSystemOut(Genome genome) {
         System.out.print("\n GENOME START   id=" + genome.genome_id);
         System.out.print("\n  nodes are :" + genome.getNodes().size());
         System.out.print("\n  genes are :" + genome.getGenes().size());
@@ -52,5 +47,39 @@ public class GenomePrinter {
 
         System.out.print("\n");
         System.out.print(" GENOME END");
+    }
+
+    public void printGenomeToFile(Genome genome, String xNameFile) {
+        // write to file genome in native format (for re-read)
+        IOseq xFile;
+
+        xFile = new IOseq(xNameFile);
+        xFile.IOseqOpenW(false);
+
+        try {
+            printGenomeToFile(genome, xFile);
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+
+        xFile.IOseqCloseW();
+    }
+
+    public void printGenomeToFile(Genome genome, IOseq xFile) {
+        xFile.IOseqWrite("genomestart  " + genome.genome_id);
+
+        for (Trait _trait : genome.getTraits()) {
+            _trait.print_to_file(xFile);
+        }
+
+        for (NNode _node : genome.getNodes()) {
+            _node.print_to_file(xFile);
+        }
+
+        for (Gene _gene : genome.getGenes()) {
+            _gene.print_to_file(xFile);
+        }
+
+        xFile.IOseqWrite("genomeend " + genome.genome_id);
     }
 }

@@ -5,11 +5,7 @@
 
    import java.awt.*;
    import java.awt.event.*;
-   import java.awt.geom.*;
-   import java.awt.image.*;
    import javax.swing.*;
-   import javax.swing.event.*;
-   import javax.swing.border.*;
    import java.util.*;
    import java.lang.*;
 
@@ -920,8 +916,8 @@ public void itemStateChanged(ItemEvent e) {
 	  // le classi di copdifica input e output quindi dovranno fornire due
 	  // metodi : uno per restituire l'input j-esimo e uno per restituire
 	  // il numero di ingressi/uscite
-	  // se I/O è da file allora è il metodo di acesso ai files che avrà lo
-	  // stesso nome e che farà la stessa cosa.
+	  // se I/O ï¿½ da file allora ï¿½ il metodo di acesso ai files che avrï¿½ lo
+	  // stesso nome e che farï¿½ la stessa cosa.
 	  
 		 Network _net = null;
 		 boolean success = false;
@@ -1250,7 +1246,7 @@ public void itemStateChanged(ItemEvent e) {
 							  elem = riga.nextToken();
 							  double v1 = Double.parseDouble(elem);
 							  tgt[count][j] = v1;
-						   //					  System.out.print("\n per epoch "+count+" tgt("+j+"£) = "+v1);
+						   //					  System.out.print("\n per epoch "+count+" tgt("+j+"ï¿½) = "+v1);
 						   }
 						   count++;
 						}
@@ -1444,7 +1440,7 @@ public void itemStateChanged(ItemEvent e) {
 				  if (_organism.winner) 
 				  {
 					 name_of_winner = EnvRoutine.getJneatFileData(winner_prefix) + generation + "_" + _organism.getGenome().genome_id; 
-					 _organism.getGenome().print_to_filename(name_of_winner);
+					 _organism.getGenome().printToFile(name_of_winner);
 				  // EnvConstant.SERIAL_WINNER++;
 					 conta++;
 				  }
@@ -1452,7 +1448,7 @@ public void itemStateChanged(ItemEvent e) {
 				  {
 					 logger.sendToLog(" generation:      in this generation " + generation + " i have found a SUPER WINNER "); 
 					 name_of_winner = EnvRoutine.getJneatFileData(winner_prefix)+ "_SUPER_" + generation + "_" + _organism.getGenome().genome_id; 
-					 _organism.getGenome().print_to_filename(name_of_winner);
+					 _organism.getGenome().printToFile(name_of_winner);
 				  //  EnvConstant.SERIAL_SUPER_WINNER++;
 					 EnvConstant.SUPER_WINNER_ = false;
 				  

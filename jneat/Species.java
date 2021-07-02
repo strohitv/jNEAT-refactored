@@ -859,7 +859,7 @@
 			   xFile.IOseqWrite(s2.toString());
 			}
 		 
-			_organism.getGenome().print_to_file(xFile);
+			_organism.getGenome().printToFile(xFile);
 		 
 		 }
 	  

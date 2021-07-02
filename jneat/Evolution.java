@@ -65,7 +65,7 @@ import java.util.StringTokenizer;
 			   Genome start_genome = new Genome(id, xFile);
 			// backup this 'initial' genome (is only for test
 			// if the read & write are correct
-			   start_genome.print_to_filename("c:\\jneat\\dati\\genome.readed");
+			   start_genome.printToFile("c:\\jneat\\dati\\genome.readed");
 			
 			   for (expcount = 0; expcount < Neat.p_num_runs; expcount++) 
 			   {
@@ -160,7 +160,7 @@ import java.util.StringTokenizer;
 			   if (_organism.winner)
 			   {
 				  System.out.print("\n   -WINNER IS #" + _organism.genome.genome_id);
-				  _organism.getGenome().print_to_filename("c:\\jneat\\dati\\xor_win" + cnt);
+				  _organism.getGenome().printToFile("c:\\jneat\\dati\\xor_win" + cnt);
 				  cnt++;
 			   }
 			}
@@ -300,7 +300,7 @@ import java.util.StringTokenizer;
 			// generate from genome the phenotype
 			   g1.genesis(id);
 			// view genotype
-			   g1.op_view();
+			   g1.print();
 			
 			// assign reference to genotype
 			   net = g1.phenotype;
@@ -532,9 +532,9 @@ import java.util.StringTokenizer;
 	  
 	  
 		 System.out.println("\n ----genome-A----------");
-		 gA.op_view();
+		 gA.print();
 		 System.out.println("\n ----genome-B----------");
-		 gB.op_view();
+		 gB.print();
 	  
 	  
 	  //	gA.DEBUGmate_singlepoint(gB,3);
@@ -553,7 +553,7 @@ import java.util.StringTokenizer;
 	  // this step is for verify the phenotype created
 		 gC.genesis(999);
 	  // the step print the result genome
-		 gC.op_view();
+		 gC.print();
 	  
 	  
 	  // for viewing the imagine of two genome input and the genome output
@@ -612,7 +612,7 @@ import java.util.StringTokenizer;
 			   g1.genesis(id);
 			
 			// view genotype
-			   g1.op_view();
+			   g1.print();
 			
 			// assign reference to genotype
 			   net = g1.phenotype;

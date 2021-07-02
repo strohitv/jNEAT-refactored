@@ -4,7 +4,7 @@ import jNeatCommon.IOseq;
 import jNeatCommon.NeatConstant;
 import jNeatCommon.NeatRoutine;
 import jneat.utils.CompabilityCounter;
-import jneat.utils.GenomePrinter;
+import jneat.utils.Printer;
 
 import java.text.DecimalFormat;
 import java.util.StringTokenizer;
@@ -30,7 +30,7 @@ public class Genome extends Neat {
     Vector<NNode> nodes;
 
     // used to print out information of the Genome
-    private final GenomePrinter printer = new GenomePrinter(this);
+    private final Printer printer = new Printer();
 
     // note are two String for store statistics information
     // when genomes are readed (if exist : null otherwise);
@@ -100,6 +100,18 @@ public class Genome extends Neat {
         this.genes = genes;
         notes = null;
         phenotype = null;
+    }
+
+    public void printToFile(String xNameFile) {
+        printer.printGenomeToFile(this, xNameFile);
+    }
+
+    public void printToFile(IOseq xFile) {
+        printer.printGenomeToFile(this, xFile);
+    }
+
+    public void print() {
+        printer.printGenomeOnSystemOut(this);
     }
 
     public void mutate_link_weight(double power, double rate, int mutation_type) {
@@ -177,7 +189,7 @@ public class Genome extends Neat {
 
         if (outlist.size() == 0) {
             System.out.print("\n ALERT : are a network whitout OUTPUTS; the result can unpredictable");
-            printer.printGenome();
+            printer.printGenomeOnSystemOut(this);
         }
 
         for (Gene _gene : genes.stream().filter(Gene::getEnable).collect(Collectors.toList())) {
@@ -337,22 +349,6 @@ public class Genome extends Neat {
         }
 
         return true;
-    }
-
-    public void print_to_filename(String xNameFile) {
-        // write to file genome in native format (for re-read)
-        IOseq xFile;
-
-        xFile = new IOseq(xNameFile);
-        xFile.IOseqOpenW(false);
-
-        try {
-            print_to_file(xFile);
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-
-        xFile.IOseqCloseW();
     }
 
     public Genome mate_multipoint(Genome g, int genomeid, double fitness1, double fitness2) {
@@ -616,11 +612,11 @@ public class Genome extends Neat {
             System.out.print("\n * during mate_multipoint : please control the following's *********");
             System.out.print("\n * control block : ");
             System.out.print("\n Genome A= ");
-            printer.printGenome();
+            printer.printGenomeOnSystemOut(this);
             System.out.print("\n Genome B= ");
-            g.printer.printGenome();
+            printer.printGenomeOnSystemOut(g);
             System.out.print("\n Result = ");
-            new_genome.printer.printGenome();
+            printer.printGenomeOnSystemOut(new_genome);
             System.exit(0);
         }
 
@@ -1778,24 +1774,6 @@ public class Genome extends Neat {
                 genes.addElement(newgene);
             }
         }
-    }
-
-    public void print_to_file(IOseq xFile) {
-        xFile.IOseqWrite("genomestart  " + genome_id);
-
-        for (Trait _trait : traits) {
-            _trait.print_to_file(xFile);
-        }
-
-        for (NNode _node : nodes) {
-            _node.print_to_file(xFile);
-        }
-
-        for (Gene _gene : genes) {
-            _gene.print_to_file(xFile);
-        }
-
-        xFile.IOseqWrite("genomeend " + genome_id);
     }
 
     public void View_mate_singlepoint(Genome g) {

@@ -999,7 +999,7 @@ import java.util.*;
 		 
 		 // backup genome primordial
 			fname = fname_prefix + fmt4.format(count);
-			new_genome.print_to_filename(fname);
+			new_genome.printToFile(fname);
 			organisms.add(new Organism(0,new_genome,1));
 		 }
 	  
@@ -1184,7 +1184,7 @@ import java.util.*;
 		 while (itr_organism.hasNext()) 
 		 {
 			_organism = ((Organism) itr_organism.next());
-			_organism.genome.print_to_file(xFile);
+			_organism.genome.printToFile(xFile);
 		 }
 	  
 	  
