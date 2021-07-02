@@ -3,6 +3,7 @@ package jneat;
 import jNeatCommon.IOseq;
 import jNeatCommon.NeatConstant;
 import jNeatCommon.NeatRoutine;
+import jneat.utils.CompabilityCounter;
 
 import java.text.DecimalFormat;
 import java.util.StringTokenizer;
@@ -207,60 +208,37 @@ public class Genome extends Neat {
      * is:  disjoint_coeff*pdg+excess_coeff*peg+mutdiff_coeff*mdmg.
      * The 3 coefficients are global system parameters
      */
-    public double compatibility(Genome g) {
-        //Set up the counters
-        double num_disjoint = 0.0;
-        double num_excess = 0.0;
-        double mut_diff_total = 0.0;
-        double num_matching = 0.0; //Used to normalize mutation_num differences
+    public double compatibility(Genome other) {
+        CompabilityCounter counter = new CompabilityCounter();
 
-        //Get the length of the longest Genome for percentage computations
-        int size1 = genes.size();
-        int size2 = g.genes.size();
-        double max_genome_size = Math.max(size1, size2); //Size of larger Genome
+        // Get the length of the longest Genome for percentage computations
+        double max_genome_size = Math.max(genes.size(), other.genes.size()); //Size of larger Genome
 
-        //Now move through the Genes of each potential parent
-        //until both Genomes end
-        int j1 = 0;
-        int j2 = 0;
+        // Now move through the Genes of each potential parent until both Genomes end
         for (int j = 0; j < max_genome_size; j++) {
-            if (j1 >= size1) {
-                num_excess += 1.0;
-                j2++;
-            } else if (j2 >= size2) {
-                num_excess += 1.0;
-                j1++;
+            if (counter.getFirstGenePosition() >= genes.size()) {
+                counter.addOtherExcess();
+            } else if (counter.getSecondGenePosition() >= other.genes.size()) {
+                counter.addOwnExcess();
             } else {
-                Gene _gene1 = genes.elementAt(j1);
-                Gene _gene2 = g.genes.elementAt(j2);
+                Gene _gene1 = genes.elementAt(counter.getFirstGenePosition());
+                Gene _gene2 = other.genes.elementAt(counter.getSecondGenePosition());
 
-                //Extract current innovation numbers
-                //Innovation numbers
-                double p1innov = _gene1.innovation_num;
-                double p2innov = _gene2.innovation_num;
-
-                if (p1innov == p2innov) {
-                    num_matching += 1.0;
-                    mut_diff_total += Math.abs(_gene1.mutation_num - _gene2.mutation_num);
-                    j1++;
-                    j2++;
-                } else if (p1innov < p2innov) {
-                    j1++;
-                    num_disjoint += 1.0;
-                } else if (p2innov < p1innov) {
-                    j2++;
-                    num_disjoint += 1.0;
+                if (_gene1.innovation_num == _gene2.innovation_num) {
+                    counter.addMatching(_gene1.mutation_num, _gene2.mutation_num);
+                } else if (_gene1.innovation_num < _gene2.innovation_num) {
+                    counter.addOwnDisjoint();
+                } else {
+                    counter.addOtherDisjoint();
                 }
             }
         }
 
         // Return the compatibility number using compatibility formula
-        // Note that mut_diff_total/num_matching gives the AVERAGE
-        // difference between mutation_nums for any two matching Genes
-        // in the Genome.
+        // Note that mut_diff_total/num_matching gives the AVERAGE difference between mutation_nums for any two matching Genes in the Genome.
         // Look at disjointedness and excess in the absolute (ignoring size)
-        return (Neat.p_disjoint_coeff * (num_disjoint / 1.0) + Neat.p_excess_coeff * (num_excess / 1.0)
-                + Neat.p_mutdiff_coeff * (mut_diff_total / num_matching));
+        return (Neat.p_disjoint_coeff * (counter.getDisjointCount() / 1.0) + Neat.p_excess_coeff * (counter.getExcessCount() / 1.0)
+                + Neat.p_mutdiff_coeff * (counter.getTotalWeigthDifference() / counter.getMatchingCount()));
     }
 
     public double get_last_gene_innovnum() {
