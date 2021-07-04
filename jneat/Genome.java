@@ -329,11 +329,11 @@ public class Genome extends Neat {
             // Check for inode, onode in the newnodes list
             // TODO do we need to stick to the order? this if ensured node_insert is first being called with the lower id node first, but do we need to stick to that order?
             if (inode.node_id < onode.node_id) {
-                new_inode = searchNode(newnodes, newtraits, inode, first_traitnum);
-                new_onode = searchNode(newnodes, newtraits, onode, first_traitnum);
+                new_inode = searchOrAddNode(newnodes, newtraits, inode, first_traitnum);
+                new_onode = searchOrAddNode(newnodes, newtraits, onode, first_traitnum);
             } else {
-                new_onode = searchNode(newnodes, newtraits, onode, first_traitnum);
-                new_inode = searchNode(newnodes, newtraits, inode, first_traitnum);
+                new_onode = searchOrAddNode(newnodes, newtraits, onode, first_traitnum);
+                new_inode = searchOrAddNode(newnodes, newtraits, inode, first_traitnum);
             }
 
             //Add the Gene
@@ -365,28 +365,11 @@ public class Genome extends Neat {
         return new_genome;
     }
 
-    private NNode searchNode(Vector<NNode> newnodes, Vector<Trait> newtraits, NNode node, int first_traitnum) {
-        NNode curnode = null;
+    private NNode searchOrAddNode(Vector<NNode> newnodes, Vector<Trait> newtraits, NNode node, int first_traitnum) {
+        NNode new_inode = newnodes.stream().filter(n -> n.node_id == node.node_id).findFirst().orElse(null);
 
-        // search the node
-        boolean found = false;
-        for (int ix = 0; ix < newnodes.size(); ix++) {
-            curnode = newnodes.elementAt(ix);
-            if (curnode.node_id == node.node_id) {
-                found = true;
-                break;
-            }
-        }
-
-        NNode new_inode;
-        // if exist , point to exitsting version
-        if (found) {
-            new_inode = curnode;
-        } else { // else create the node
-            int nodetraitnum = 0;
-            if (node.nodetrait != null) {
-                nodetraitnum = node.nodetrait.trait_id - first_traitnum;
-            }
+        if (new_inode == null) { // create the node if it didn't exist
+            int nodetraitnum = (node.nodetrait != null) ?  node.nodetrait.trait_id - first_traitnum : 0;
 
             new_inode = new NNode(node, newtraits.elementAt(nodetraitnum));
 
@@ -556,11 +539,11 @@ public class Genome extends Neat {
                 NNode new_inode;
                 NNode new_onode;
                 if (inode.node_id < onode.node_id) {
-                    new_inode = searchNode(newnodes, newtraits, inode, first_traitnum);
-                    new_onode = searchNode(newnodes, newtraits, onode, first_traitnum);
+                    new_inode = searchOrAddNode(newnodes, newtraits, inode, first_traitnum);
+                    new_onode = searchOrAddNode(newnodes, newtraits, onode, first_traitnum);
                 } else { // end block : inode.node_id < onode.node_id
-                    new_onode = searchNode(newnodes, newtraits, onode, first_traitnum);
-                    new_inode = searchNode(newnodes, newtraits, inode, first_traitnum);
+                    new_onode = searchOrAddNode(newnodes, newtraits, onode, first_traitnum);
+                    new_inode = searchOrAddNode(newnodes, newtraits, inode, first_traitnum);
                 }
 
                 //Add the Gene
@@ -1001,16 +984,16 @@ public class Genome extends Neat {
         }
     }
 
-    public void node_insert(Vector<NNode> nlist, NNode n) {
+    public void node_insert(Vector<NNode> nlist, NNode node) {
         int position = 0;
         for (int j = 0; j < nlist.size(); j++) {
-            if (nlist.elementAt(j).node_id >= n.node_id) {
+            if (nlist.elementAt(j).node_id >= node.node_id) {
                 position = j;
                 break;
             }
         }
 
-        nlist.insertElementAt(n, position);
+        nlist.insertElementAt(node, position);
     }
 
     public void mutate_add_link(Population pop, int tries) {
