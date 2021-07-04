@@ -3,10 +3,7 @@ package jneat;
 import jNeatCommon.IOseq;
 import jNeatCommon.NeatConstant;
 import jNeatCommon.NeatRoutine;
-import jneat.utils.CompabilityCounter;
-import jneat.utils.GenomeVerifier;
-import jneat.utils.MateMultipointCounter;
-import jneat.utils.Printer;
+import jneat.utils.*;
 
 import java.text.DecimalFormat;
 import java.util.StringTokenizer;
@@ -275,14 +272,11 @@ public class Genome extends Neat {
     }
 
     public Genome mate_multipoint(Genome g, int genomeid, double fitness1, double fitness2) {
-        NNode curnode = null;
-
         //First, average the Traits from the 2 parents to form the baby's Traits
         //It is assumed that trait vectors are the same length
         //In the future, may decide on a different method for
         //trait mating (corrispondenza)
         Vector<Trait> newtraits = new Vector<>(traits.size(), 0);
-
         for (int j = 0; j < traits.size(); j++) {
             newtraits.add(new Trait(traits.elementAt(j), g.traits.elementAt(j)));
         }
@@ -299,6 +293,7 @@ public class Genome extends Neat {
         Vector<NNode> newnodes = new Vector<>(len_nodes, 0);
         while (counter.getFirstGenePosition() < genes.size() || counter.getSecondGenePosition() < g.genes.size()) {
             counter.reset();
+
             if (counter.getFirstGenePosition() >= genes.size()) {
                 counter.chooseGeneFromSecond();
             } else if (counter.getSecondGenePosition() >= g.genes.size()) {
@@ -314,9 +309,6 @@ public class Genome extends Neat {
                 continue;
             }
 
-            NNode new_inode;
-            NNode new_onode;
-
             //Now add the chosengene to the baby
             //First, get the trait pointer
             int first_traitnum = traits.firstElement().trait_id;
@@ -330,110 +322,18 @@ public class Genome extends Neat {
             NNode inode = counter.getChosenGene().lnk.in_node;
             NNode onode = counter.getChosenGene().lnk.out_node;
 
+
+            NNode new_inode;
+            NNode new_onode;
             // Check for inode in the newnodes list
             // Check for inode, onode in the newnodes list
-            boolean found;
-            // TODO das kann man vermutlich einfach halbieren, indem man im Else-Fall swappt omg
+            // TODO do we need to stick to the order? this if ensured node_insert is first being called with the lower id node first, but do we need to stick to that order?
             if (inode.node_id < onode.node_id) {
-                // search the inode
-                found = false;
-                for (int ix = 0; ix < newnodes.size(); ix++) {
-                    curnode = newnodes.elementAt(ix);
-                    if (curnode.node_id == inode.node_id) {
-                        found = true;
-                        break;
-                    }
-                }
-
-                // if exist , point to exitsting version
-                if (found) {
-                    new_inode = curnode;
-                } else { // else create the inode
-                    int nodetraitnum = 0;
-                    if (inode.nodetrait != null) {
-                        nodetraitnum = inode.nodetrait.trait_id - first_traitnum;
-                    }
-
-                    new_inode = new NNode(inode, newtraits.elementAt(nodetraitnum));
-
-                    //insert in newnodes list
-                    node_insert(newnodes, new_inode);
-                }
-
-                // search the onode
-                found = false;
-                for (int ix = 0; ix < newnodes.size(); ix++) {
-                    curnode = newnodes.elementAt(ix);
-                    if (curnode.node_id == onode.node_id) {
-                        found = true;
-                        break;
-                    }
-                }
-
-                // if exist , point to exitsting version
-                if (found) {
-                    new_onode = curnode;
-                } else { // else create the onode
-                    int nodetraitnum = 0;
-                    if (onode.nodetrait != null) {
-                        nodetraitnum = onode.nodetrait.trait_id - first_traitnum;
-                    }
-
-                    new_onode = new NNode(onode, newtraits.elementAt(nodetraitnum));
-
-                    //insert in newnodes list
-                    node_insert(newnodes, new_onode);
-                }
-            } else { // end block : inode.node_id < onode.node_id
-                // search the onode
-                found = false;
-                for (int ix = 0; ix < newnodes.size(); ix++) {
-                    curnode = newnodes.elementAt(ix);
-                    if (curnode.node_id == onode.node_id) {
-                        found = true;
-                        break;
-                    }
-                }
-
-                // if exist , point to exitsting version
-                if (found) {
-                    new_onode = curnode;
-                } else { // else create the onode
-                    int nodetraitnum = 0;
-                    if (onode.nodetrait != null) {
-                        nodetraitnum = onode.nodetrait.trait_id - first_traitnum;
-                    }
-
-                    new_onode = new NNode(onode, newtraits.elementAt(nodetraitnum));
-
-                    //insert in newnodes list
-                    node_insert(newnodes, new_onode);
-                }
-
-                // search the inode
-                found = false;
-                for (int ix = 0; ix < newnodes.size(); ix++) {
-                    curnode = newnodes.elementAt(ix);
-                    if (curnode.node_id == inode.node_id) {
-                        found = true;
-                        break;
-                    }
-                }
-
-                // if exist , point to exitsting version
-                if (found) {
-                    new_inode = curnode;
-                } else { // else create the inode
-                    int nodetraitnum = 0;
-                    if (inode.nodetrait != null) {
-                        nodetraitnum = inode.nodetrait.trait_id - first_traitnum;
-                    }
-
-                    new_inode = new NNode(inode, newtraits.elementAt(nodetraitnum));
-
-                    //insert in newnodes list
-                    node_insert(newnodes, new_inode);
-                }
+                new_inode = searchNode(newnodes, newtraits, inode, first_traitnum);
+                new_onode = searchNode(newnodes, newtraits, onode, first_traitnum);
+            } else {
+                new_onode = searchNode(newnodes, newtraits, onode, first_traitnum);
+                new_inode = searchNode(newnodes, newtraits, inode, first_traitnum);
             }
 
             //Add the Gene
@@ -463,6 +363,38 @@ public class Genome extends Neat {
         }
 
         return new_genome;
+    }
+
+    private NNode searchNode(Vector<NNode> newnodes, Vector<Trait> newtraits, NNode node, int first_traitnum) {
+        NNode curnode = null;
+
+        // search the node
+        boolean found = false;
+        for (int ix = 0; ix < newnodes.size(); ix++) {
+            curnode = newnodes.elementAt(ix);
+            if (curnode.node_id == node.node_id) {
+                found = true;
+                break;
+            }
+        }
+
+        NNode new_inode;
+        // if exist , point to exitsting version
+        if (found) {
+            new_inode = curnode;
+        } else { // else create the node
+            int nodetraitnum = 0;
+            if (node.nodetrait != null) {
+                nodetraitnum = node.nodetrait.trait_id - first_traitnum;
+            }
+
+            new_inode = new NNode(node, newtraits.elementAt(nodetraitnum));
+
+            // insert in newnodes list
+            node_insert(newnodes, new_inode);
+        }
+
+        return new_inode;
     }
 
     public Genome mate_multipoint_avg(Genome g, int genomeid, double fitness1, double fitness2) {
@@ -499,7 +431,6 @@ public class Genome extends Neat {
         Vector<NNode> newnodes = new Vector<>(len_nodes, 0);
 
         Gene chosengene = null;
-        NNode curnode = null;
 
         boolean skip;
 
@@ -624,107 +555,12 @@ public class Genome extends Neat {
                 //Check for inode in the newnodes list
                 NNode new_inode;
                 NNode new_onode;
-                boolean found;
                 if (inode.node_id < onode.node_id) {
-                    // search the inode
-                    found = false;
-                    for (int ix = 0; ix < newnodes.size(); ix++) {
-                        curnode = newnodes.elementAt(ix);
-                        if (curnode.node_id == inode.node_id) {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    // if exist , point to exitsting version
-                    if (found) {
-                        new_inode = curnode;
-                    } else { // else create the inode
-                        int nodetraitnum = 0;
-                        if (inode.nodetrait != null) {
-                            nodetraitnum = inode.nodetrait.trait_id - first_traitnum;
-                        }
-
-                        new_inode = new NNode(inode, newtraits.elementAt(nodetraitnum));
-
-                        //insert in newnodes list
-                        node_insert(newnodes, new_inode);
-                    }
-
-                    // search the onode
-                    found = false;
-                    for (int ix = 0; ix < newnodes.size(); ix++) {
-                        curnode = newnodes.elementAt(ix);
-                        if (curnode.node_id == onode.node_id) {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    // if exist , point to exitsting version
-                    if (found) {
-                        new_onode = curnode;
-                    } else { // else create the onode
-                        int nodetraitnum = 0;
-                        if (onode.nodetrait != null) {
-                            nodetraitnum = onode.nodetrait.trait_id - first_traitnum;
-                        }
-
-                        new_onode = new NNode(onode, newtraits.elementAt(nodetraitnum));
-
-                        //insert in newnodes list
-                        node_insert(newnodes, new_onode);
-                    }
+                    new_inode = searchNode(newnodes, newtraits, inode, first_traitnum);
+                    new_onode = searchNode(newnodes, newtraits, onode, first_traitnum);
                 } else { // end block : inode.node_id < onode.node_id
-                    // search the onode
-                    found = false;
-                    for (int ix = 0; ix < newnodes.size(); ix++) {
-                        curnode = newnodes.elementAt(ix);
-                        if (curnode.node_id == onode.node_id) {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    // if exist , point to exitsting version
-                    if (found) {
-                        new_onode = curnode;
-                    } else { // else create the onode
-                        int nodetraitnum = 0;
-                        if (onode.nodetrait != null) {
-                            nodetraitnum = onode.nodetrait.trait_id - first_traitnum;
-                        }
-
-                        new_onode = new NNode(onode, newtraits.elementAt(nodetraitnum));
-
-                        //insert in newnodes list
-                        node_insert(newnodes, new_onode);
-                    }
-
-                    // search the inode
-                    found = false;
-                    for (int ix = 0; ix < newnodes.size(); ix++) {
-                        curnode = newnodes.elementAt(ix);
-                        if (curnode.node_id == inode.node_id) {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    // if exist , point to exitsting version
-                    if (found) {
-                        new_inode = curnode;
-                    } else { // else create the inode
-                        int nodetraitnum = 0;
-                        if (inode.nodetrait != null) {
-                            nodetraitnum = inode.nodetrait.trait_id - first_traitnum;
-                        }
-
-                        new_inode = new NNode(inode, newtraits.elementAt(nodetraitnum));
-
-                        //insert in newnodes list
-                        node_insert(newnodes, new_inode);
-                    }
+                    new_onode = searchNode(newnodes, newtraits, onode, first_traitnum);
+                    new_inode = searchNode(newnodes, newtraits, inode, first_traitnum);
                 }
 
                 //Add the Gene
