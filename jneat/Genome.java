@@ -272,6 +272,14 @@ public class Genome extends Neat {
 	}
 
 	public Genome mate_multipoint(Genome g, int genomeid, double fitness1, double fitness2) {
+		return executeMultipointMating(g, genomeid, fitness1, fitness2, false);
+	}
+
+	public Genome mate_multipoint_avg(Genome g, int genomeid, double fitness1, double fitness2) {
+		return executeMultipointMating(g, genomeid, fitness1, fitness2, true);
+	}
+
+	private Genome executeMultipointMating(Genome g, int genomeid, double fitness1, double fitness2, boolean createAverageGenes) {
 		//First, average the Traits from the 2 parents to form the baby's Traits
 		//It is assumed that trait vectors are the same length
 		//In the future, may decide on a different method for
@@ -281,9 +289,9 @@ public class Genome extends Neat {
 			newtraits.add(new Trait(traits.elementAt(j), g.traits.elementAt(j)));
 		}
 
-		// Figure out which genome is better
-		// The worse genome should not be allowed to add extra structural baggage
-		// If they are the same, use the smaller one's disjoint and excess genes only
+		//Figure out which genome is better
+		//The worse genome should not be allowed to add extra structural baggage
+		//If they are the same, use the smaller one's disjoint and excess genes only
 		MateMultipointCounter counter = new MateMultipointCounter(fitness1 > fitness2 || (fitness1 == fitness2 && genes.size() < g.genes.size()), genes, g.genes);
 
 		int len_genome = Math.max(genes.size(), g.genes.size());
@@ -291,6 +299,7 @@ public class Genome extends Neat {
 
 		Vector<Gene> newgenes = new Vector<>(len_genome, 0);
 		Vector<NNode> newnodes = new Vector<>(len_nodes, 0);
+
 		while (counter.getFirstGenePosition() < genes.size() || counter.getSecondGenePosition() < g.genes.size()) {
 			counter.reset();
 
@@ -299,10 +308,9 @@ public class Genome extends Neat {
 			} else if (counter.getSecondGenePosition() >= g.genes.size()) {
 				counter.chooseGeneFromFirst();
 			} else {
-				counter.chooseBetterGene();
-			}
+				counter.chooseBetterGene(createAverageGenes);
+			} // end chosen gene
 
-			// Check to see if the chosengene conflicts with an already chosen (= added) gene, i.e. do they represent the same link
 			counter.checkDuplicate(newgenes);
 
 			if (counter.shouldSkip()) {
@@ -322,16 +330,13 @@ public class Genome extends Neat {
 			NNode inode = counter.getChosenGene().lnk.in_node;
 			NNode onode = counter.getChosenGene().lnk.out_node;
 
-
+			//Check for inode in the newnodes list
 			NNode new_inode;
 			NNode new_onode;
-			// Check for inode in the newnodes list
-			// Check for inode, onode in the newnodes list
-			// TODO do we need to stick to the order? this if ensured node_insert is first being called with the lower id node first, but do we need to stick to that order?
 			if (inode.node_id < onode.node_id) {
 				new_inode = searchOrAddNode(newnodes, newtraits, inode, first_traitnum);
 				new_onode = searchOrAddNode(newnodes, newtraits, onode, first_traitnum);
-			} else {
+			} else { // end block : inode.node_id < onode.node_id
 				new_onode = searchOrAddNode(newnodes, newtraits, onode, first_traitnum);
 				new_inode = searchOrAddNode(newnodes, newtraits, inode, first_traitnum);
 			}
@@ -345,11 +350,11 @@ public class Genome extends Neat {
 			}
 
 			newgenes.add(newgene);
-		} // end block genome (while)
+		} // end block genome
 
 		Genome new_genome = new Genome(genomeid, newtraits, newnodes, newgenes);
 
-		if (newnodes.stream().noneMatch(n -> n.gen_node_label == NeatConstant.OUTPUT)) {
+		if (!createAverageGenes && newnodes.stream().noneMatch(n -> n.gen_node_label == NeatConstant.OUTPUT)) {
 			System.out.print("\n *--------------- not found output node ----------------------------");
 			System.out.print("\n * during mate_multipoint : please control the following's *********");
 			System.out.print("\n * control block : ");
@@ -378,187 +383,6 @@ public class Genome extends Neat {
 		}
 
 		return new_inode;
-	}
-
-	public Genome mate_multipoint_avg(Genome g, int genomeid, double fitness1, double fitness2) {
-		boolean disable = false; //Set to true if we want to disabled a chosen gene
-		int traitnum;
-
-		//Set up the avgene
-		Gene avgene = new Gene(null, 0.0, null, null, false, 0.0, 0.0);
-
-		//First, average the Traits from the 2 parents to form the baby's Traits
-		//It is assumed that trait vectors are the same length
-		//In the future, may decide on a different method for
-		//trait mating (corrispondenza)
-		int len_traits = traits.size();
-
-		Vector<Trait> newtraits = new Vector<>(len_traits, 0);
-		for (int j = 0; j < len_traits; j++) {
-			newtraits.add(new Trait(traits.elementAt(j), g.traits.elementAt(j)));
-		}
-
-		//Figure out which genome is better
-		//The worse genome should not be allowed to add extra structural baggage
-		//If they are the same, use the smaller one's disjoint and excess genes only
-		boolean p1better = false;
-
-		if (fitness1 > fitness2 || (fitness1 == fitness2 && genes.size() < g.genes.size())) {
-			p1better = true;
-		}
-
-		int len_genome = Math.max(genes.size(), g.genes.size());
-		int len_nodes = nodes.size();
-
-		Vector<Gene> newgenes = new Vector<>(len_genome, 0);
-		Vector<NNode> newnodes = new Vector<>(len_nodes, 0);
-
-		Gene chosengene = null;
-
-		boolean skip;
-
-		int j1 = 0;
-		int j2 = 0;
-		while (j1 < genes.size() || j2 < g.genes.size()) {
-			//  chosen of 'just' gene
-			avgene.enable = true; //Default to enabled
-			skip = false; //Default to not skipping a chosen gene
-
-			if (j1 >= genes.size()) {
-				chosengene = g.genes.elementAt(j2);
-				j2++;
-				if (p1better) {
-					skip = true; //Skip excess from the worse genome
-				}
-			} else if (j2 >= g.genes.size()) {
-				chosengene = genes.elementAt(j1);
-				j1++;
-				if (!p1better) {
-					skip = true; //Skip excess from the worse genome
-				}
-			} else {
-				Gene _p1gene = genes.elementAt(j1);
-				Gene _p2gene = g.genes.elementAt(j2);
-
-				if (_p1gene.innovation_num == _p2gene.innovation_num) {
-					if (NeatRoutine.randfloat() > 0.5) {
-						avgene.lnk.linktrait = _p1gene.lnk.linktrait;
-					} else {
-						avgene.lnk.linktrait = _p2gene.lnk.linktrait;
-					}
-
-					//WEIGHTS AVERAGED HERE
-					avgene.lnk.weight = (_p1gene.lnk.weight + _p2gene.lnk.weight) / 2.0;
-
-					if (NeatRoutine.randfloat() > 0.5) {
-						avgene.lnk.in_node = _p1gene.lnk.in_node;
-					} else {
-						avgene.lnk.in_node = _p2gene.lnk.in_node;
-					}
-
-					if (NeatRoutine.randfloat() > 0.5) {
-						avgene.lnk.out_node = _p1gene.lnk.out_node;
-					} else {
-						avgene.lnk.out_node = _p2gene.lnk.out_node;
-					}
-
-					if (NeatRoutine.randfloat() > 0.5) {
-						avgene.lnk.is_recurrent = _p1gene.lnk.is_recurrent;
-					} else {
-						avgene.lnk.is_recurrent = _p2gene.lnk.is_recurrent;
-					}
-
-					avgene.innovation_num = _p1gene.innovation_num;
-					avgene.mutation_num = (_p1gene.mutation_num + _p2gene.mutation_num) / 2.0;
-
-					//If one is disabled, the corresponding gene in the offspring
-					//will likely be disabled
-					disable = false;
-					if (!_p1gene.enable || !_p2gene.enable) {
-						if (NeatRoutine.randfloat() < 0.75) {
-							disable = true;
-						}
-					}
-
-					chosengene = avgene;
-
-					j1++;
-					j2++;
-				} else if (_p1gene.innovation_num < _p2gene.innovation_num) {
-					chosengene = _p1gene;
-					j1++;
-					if (!p1better) {
-						skip = true;
-					}
-				} else if (_p2gene.innovation_num < _p1gene.innovation_num) {
-					chosengene = _p2gene;
-					j2++;
-					if (p1better) {
-						skip = true;
-					}
-				}
-			} // end chosen gene
-
-			assert chosengene != null;
-
-			//Check to see if the chosengene conflicts with an already chosen gene
-			//i.e. do they represent the same link
-			for (Gene gene : newgenes) {
-				if (gene.lnk.in_node.node_id == chosengene.lnk.in_node.node_id
-						&& gene.lnk.out_node.node_id == chosengene.lnk.out_node.node_id
-						&& gene.lnk.is_recurrent == chosengene.lnk.is_recurrent) {
-					skip = true;
-					break;
-				}
-
-				if (gene.lnk.in_node.node_id == chosengene.lnk.out_node.node_id
-						&& gene.lnk.out_node.node_id == chosengene.lnk.in_node.node_id
-						&& !gene.lnk.is_recurrent
-						&& !chosengene.lnk.is_recurrent) {
-					skip = true;
-					break;
-				}
-			}
-
-			if (!skip) {
-				//Now add the chosengene to the baby
-				//First, get the trait pointer
-				int first_traitnum = traits.firstElement().trait_id;
-
-				if (chosengene.lnk.linktrait == null) {
-					traitnum = first_traitnum;
-				} else {
-					traitnum = chosengene.lnk.linktrait.trait_id - first_traitnum;
-				}
-
-				//Next check for the nodes, add them if not in the baby Genome already
-				NNode inode = chosengene.lnk.in_node;
-				NNode onode = chosengene.lnk.out_node;
-
-				//Check for inode in the newnodes list
-				NNode new_inode;
-				NNode new_onode;
-				if (inode.node_id < onode.node_id) {
-					new_inode = searchOrAddNode(newnodes, newtraits, inode, first_traitnum);
-					new_onode = searchOrAddNode(newnodes, newtraits, onode, first_traitnum);
-				} else { // end block : inode.node_id < onode.node_id
-					new_onode = searchOrAddNode(newnodes, newtraits, onode, first_traitnum);
-					new_inode = searchOrAddNode(newnodes, newtraits, inode, first_traitnum);
-				}
-
-				//Add the Gene
-				Gene newgene = new Gene(chosengene, newtraits.elementAt(traitnum), new_inode, new_onode);
-
-				if (disable) {
-					newgene.enable = false;
-					disable = false;
-				}
-
-				newgenes.add(newgene);
-			}
-		} // end block genome
-
-		return new Genome(genomeid, newtraits, newnodes, newgenes);
 	}
 
 	public Genome mate_singlepoint(Genome g, int genomeid) {
