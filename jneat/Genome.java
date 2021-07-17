@@ -387,10 +387,6 @@ public class Genome extends Neat {
 
 	public Genome mate_singlepoint(Genome g, int genomeid) {
 		Gene chosengene = null;
-		int crosspoint;
-
-		NNode curnode = null;
-
 		int traitnum;
 
 		Vector<Trait> newtraits = new Vector<>(traits.size(), 0);
@@ -405,83 +401,66 @@ public class Genome extends Neat {
 		Vector<Gene> newgenes = new Vector<>(genes.size(), 0);
 		Vector<NNode> newnodes = new Vector<>(nodes.size(), 0);
 
-		int stopA;
-		int stopB;
-		Vector<Gene> genomeA;
-		Vector<Gene> genomeB;
-		if (genes.size() < g.genes.size()) {
-			crosspoint = NeatRoutine.randint(0, genes.size() - 1);
-			stopA = genes.size();
-			stopB = g.genes.size();
-			genomeA = genes;
-			genomeB = g.genes;
-		} else {
-			crosspoint = NeatRoutine.randint(0, g.genes.size() - 1);
-			stopA = g.genes.size();
-			stopB = genes.size();
-			genomeA = g.genes;
-			genomeB = genes;
-		}
+		// genomeB always is the larger genomes
+		Vector<Gene> genomeA = genes.size() < g.genes.size() ? genes : g.genes;
+		Vector<Gene> genomeB = genes.size() < g.genes.size() ? g.genes : genes;
+		int crosspoint = NeatRoutine.randint(0, genomeB.size() - 1);
 
-		boolean done = false;
-		double v1 = 0.0;
-		double v2 = 0.0;
-		double cellA = 0.0;
-		double cellB = 0.0;
+		double currentInnovA = 0.0;
+		double currentInnovB = 0.0;
 
-		int j1 = 0;
-		int j2 = 0;
+		int genePositionInGenomeA = 0;
+		int genePositionInGenomeB = 0;
 
-		// compute what is the hight innovation
-		double last_innovB = genomeB.elementAt(stopB - 1).innovation_num;
+		// compute what is the highest innovation
+		double last_innovB = genomeB.elementAt(genomeB.size() - 1).innovation_num;
 		double cross_innov = 0;
 
 		Gene geneA = null;
 		Gene geneB = null;
 		int genecounter = 0; //Ready to count to crosspoint
+
+		boolean done = false;
 		while (!done) {
-			boolean doneA = false;
-			boolean doneB = false;
-			boolean skip = false; //Default to not skip a Gene
-			avgene.enable = true; //Default to true
+			boolean continueWithA = false;
+			boolean continueWithB = false;
+			boolean skip = false; // Default to not skip a Gene
+			avgene.enable = true; // Default to true
 
-			if (j1 < stopA) {
-				geneA = genomeA.elementAt(j1);
-				v1 = geneA.innovation_num;
-				doneA = true;
+			if (genePositionInGenomeA < genomeA.size()) {
+				geneA = genomeA.elementAt(genePositionInGenomeA);
+				continueWithA = true;
 			}
 
-			if (j2 < stopB) {
-				geneB = genomeB.elementAt(j2);
-				v2 = geneB.innovation_num;
-				doneB = true;
+			if (genePositionInGenomeB < genomeB.size()) {
+				geneB = genomeB.elementAt(genePositionInGenomeB);
+				continueWithB = true;
 			}
 
-			if (doneA && doneB) {
+			if (continueWithA && continueWithB) {
 				//
-				if (v1 < v2) {
-					cellA = v1;
-					cellB = 0.0;
-					j1++;
-				} else if (v1 == v2) {
-					cellA = v1;
-					cellB = v1;
-					j1++;
-					j2++;
+				if (geneA.innovation_num < geneB.innovation_num) {
+					currentInnovA = geneA.innovation_num;
+					currentInnovB = 0.0;
+					genePositionInGenomeA++;
+				} else if (geneA.innovation_num == geneB.innovation_num) {
+					currentInnovA = currentInnovB = geneA.innovation_num;
+					genePositionInGenomeA++;
+					genePositionInGenomeB++;
 				} else {
-					cellA = 0.0;
-					cellB = v2;
-					j2++;
+					currentInnovA = 0.0;
+					currentInnovB = geneB.innovation_num;
+					genePositionInGenomeB++;
 				}
 			} else {
-				if (doneA) {
-					cellA = v1;
-					cellB = 0.0;
-					j1++;
-				} else if (doneB) {
-					cellA = 0.0;
-					cellB = v2;
-					j2++;
+				if (continueWithA) {
+					currentInnovA = geneA.innovation_num;
+					currentInnovB = 0.0;
+					genePositionInGenomeA++;
+				} else if (continueWithB) {
+					currentInnovA = 0.0;
+					currentInnovB = geneB.innovation_num;
+					genePositionInGenomeB++;
 				} else {
 					done = true;
 				}
@@ -491,88 +470,52 @@ public class Genome extends Neat {
 			assert geneB != null;
 			if (!done) {
 				// innovA = innovB
-				if (cellA == cellB) {
+				if (currentInnovA == currentInnovB) {
 					if (genecounter < crosspoint) {
 						chosengene = geneA;
-						genecounter++;
 					} else if (genecounter == crosspoint) {
-						if (NeatRoutine.randfloat() > 0.5) {
-							avgene.lnk.linktrait = geneA.lnk.linktrait;
-						} else {
-							avgene.lnk.linktrait = geneB.lnk.linktrait;
-						}
+						avgene.lnk.linktrait = NeatRoutine.randfloat() > 0.5 ? geneA.lnk.linktrait : geneB.lnk.linktrait;
 
 						//WEIGHTS AVERAGED HERE
 						avgene.lnk.weight = (geneA.lnk.weight + geneB.lnk.weight) / 2.0;
 
-						if (NeatRoutine.randfloat() > 0.5) {
-							avgene.lnk.in_node = geneA.lnk.in_node;
-						} else {
-							avgene.lnk.in_node = geneB.lnk.in_node;
-						}
-
-						if (NeatRoutine.randfloat() > 0.5) {
-							avgene.lnk.out_node = geneA.lnk.out_node;
-						} else {
-							avgene.lnk.out_node = geneB.lnk.out_node;
-						}
-
-						if (NeatRoutine.randfloat() > 0.5) {
-							avgene.lnk.is_recurrent = geneA.lnk.is_recurrent;
-						} else {
-							avgene.lnk.is_recurrent = geneB.lnk.is_recurrent;
-						}
+						avgene.lnk.in_node = NeatRoutine.randfloat() > 0.5 ? geneA.lnk.in_node : geneB.lnk.in_node;
+						avgene.lnk.out_node = NeatRoutine.randfloat() > 0.5 ? geneA.lnk.out_node : geneB.lnk.out_node;
+						avgene.lnk.is_recurrent = NeatRoutine.randfloat() > 0.5 ? geneA.lnk.is_recurrent : geneB.lnk.is_recurrent;
 
 						avgene.innovation_num = geneA.innovation_num;
 						avgene.mutation_num = (geneA.mutation_num + geneB.mutation_num) / 2.0;
 
-						//If one is disabled, the corresponding gene in the offspring
-						//will likely be disabled
-
-						if (!geneA.enable || !geneB.enable) {
-							avgene.enable = false;
-						}
+						// If one is disabled, the corresponding gene in the offspring will likely be disabled
+						avgene.enable = geneA.enable && geneB.enable;
 
 						chosengene = avgene;
-						genecounter++;
-						cross_innov = cellA;
-					} else if (genecounter > crosspoint) {
+						cross_innov = currentInnovA;
+					} else {
 						chosengene = geneB;
-						genecounter++;
 					}
-				} else if (cellA != 0 && cellB == 0) {
+
+					genecounter++;
+				} else if (currentInnovA != 0 && currentInnovB == 0) {
 					// innovA < innovB
-					if (genecounter < crosspoint) {
+					if (genecounter <= crosspoint || cross_innov > last_innovB) {
 						chosengene = geneA; //make geneA
 						genecounter++;
-					} else if (genecounter == crosspoint) {
-						chosengene = geneA;
-						genecounter++;
-						cross_innov = cellA;
+
+						if (genecounter == crosspoint) {
+							cross_innov = currentInnovA;
+						}
 					} else {
-						if (cross_innov > last_innovB) {
-							chosengene = geneA;
-							genecounter++;
-						} else {
-							skip = true;
-						}
+						skip = true;
 					}
-				} else {
-					if (cellA == 0 && cellB != 0) {
-						// innovA > innovB
-						if (genecounter < crosspoint) {
-							skip = true; //skip geneB
-						} else if (genecounter == crosspoint) {
-							skip = true; //skip an illogic case
-						} else {
-							if (cross_innov > last_innovB) {
-								chosengene = geneA; //make geneA
-								genecounter++;
-							} else {
-								chosengene = geneB; //make geneB : this is a pure case o single crossing
-								genecounter++;
-							}
-						}
+				} else if (currentInnovA == 0 && currentInnovB != 0) {
+					// innovA > innovB
+					if (genecounter > crosspoint) {
+						// pure case of single crossing if geneB is selected
+						chosengene = cross_innov > last_innovB ? geneA : geneB;
+						genecounter++;
+					} else {
+						skip = true; //skip geneB (illogic case if genecounter and crosspoint equal)
 					}
 				}
 
@@ -593,7 +536,6 @@ public class Genome extends Neat {
 						skip = true;
 						break;
 					}
-
 				} // and else for control of position in gennomeA/B
 
 				if (!skip) {
@@ -601,119 +543,18 @@ public class Genome extends Neat {
 					//First, get the trait pointer
 					int first_traitnum = traits.firstElement().trait_id;
 
-					if (chosengene.lnk.linktrait == null)
-						traitnum = first_traitnum;
-					else
-						traitnum = chosengene.lnk.linktrait.trait_id - first_traitnum;
+					traitnum = chosengene.lnk.linktrait == null ? first_traitnum : chosengene.lnk.linktrait.trait_id - first_traitnum;
 
 					//Next check for the nodes, add them if not in the baby Genome already
-
-					NNode inode = chosengene.lnk.in_node;
-					NNode onode = chosengene.lnk.out_node;
-
 					//Check for inode, onode in the newnodes list
-					boolean found;
 					NNode new_inode;
 					NNode new_onode;
-					if (inode.node_id < onode.node_id) {
-						// search the inode
-						found = false;
-						for (int ix = 0; ix < newnodes.size(); ix++) {
-							curnode = newnodes.elementAt(ix);
-							if (curnode.node_id == inode.node_id) {
-								found = true;
-								break;
-							}
-						}
-
-						// if exist , point to exitsting version
-						if (found) {
-							new_inode = curnode;
-						} else { // else create the inode
-							int nodetraitnum = 0;
-							if (inode.nodetrait != null) {
-								nodetraitnum = inode.nodetrait.trait_id - first_traitnum;
-							}
-
-							new_inode = new NNode(inode, newtraits.elementAt(nodetraitnum));
-
-							//insert in newnodes list
-							node_insert(newnodes, new_inode);
-						}
-
-						// search the onode
-						found = false;
-						for (int ix = 0; ix < newnodes.size(); ix++) {
-							curnode = newnodes.elementAt(ix);
-							if (curnode.node_id == onode.node_id) {
-								found = true;
-								break;
-							}
-						}
-
-						// if exist , point to exitsting version
-						if (found) {
-							new_onode = curnode;
-						} else { // else create the onode
-							int nodetraitnum = 0;
-							if (onode.nodetrait != null) {
-								nodetraitnum = onode.nodetrait.trait_id - first_traitnum;
-							}
-
-							new_onode = new NNode(onode, newtraits.elementAt(nodetraitnum));
-
-							//insert in newnodes list
-							node_insert(newnodes, new_onode);
-						}
+					if (chosengene.lnk.in_node.node_id < chosengene.lnk.out_node.node_id) {
+						new_inode = searchOrAddNode(newnodes, newtraits, chosengene.lnk.in_node, first_traitnum);
+						new_onode = searchOrAddNode(newnodes, newtraits, chosengene.lnk.out_node, first_traitnum);
 					} else { // end block : inode.node_id < onode.node_id
-						// search the onode
-						found = false;
-						for (int ix = 0; ix < newnodes.size(); ix++) {
-							curnode = newnodes.elementAt(ix);
-							if (curnode.node_id == onode.node_id) {
-								found = true;
-								break;
-							}
-						}
-						// if exist , point to exitsting version
-						if (found) {
-							new_onode = curnode;
-						} else { // else create the onode
-							int nodetraitnum = 0;
-							if (onode.nodetrait != null) {
-								nodetraitnum = onode.nodetrait.trait_id - first_traitnum;
-							}
-
-							new_onode = new NNode(onode, newtraits.elementAt(nodetraitnum));
-
-							//insert in newnodes list
-							node_insert(newnodes, new_onode);
-						}
-
-						// search the inode
-						found = false;
-						for (int ix = 0; ix < newnodes.size(); ix++) {
-							curnode = newnodes.elementAt(ix);
-							if (curnode.node_id == inode.node_id) {
-								found = true;
-								break;
-							}
-						}
-
-						// if exist , point to exitsting version
-						if (found) {
-							new_inode = curnode;
-						} else { // else create the inode
-							int nodetraitnum = 0;
-							if (inode.nodetrait != null) {
-								nodetraitnum = inode.nodetrait.trait_id - first_traitnum;
-							}
-
-							new_inode = new NNode(inode, newtraits.elementAt(nodetraitnum));
-
-							//insert in newnodes list
-							node_insert(newnodes, new_inode);
-						}
+						new_onode = searchOrAddNode(newnodes, newtraits, chosengene.lnk.out_node, first_traitnum);
+						new_inode = searchOrAddNode(newnodes, newtraits, chosengene.lnk.in_node, first_traitnum);
 					}
 
 					//Add the Gene
